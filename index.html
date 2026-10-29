@@ -422,8 +422,18 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload)
-    }).then(function (r) { if (!r.ok) throw new Error('not sent'); })
-      .catch(function () { store.set('qlcard_queue', JSON.stringify(entry)); });
+    }).then(function (r) {
+        /* Test mode (add ?test to the address): shows the form service's reply on screen. */
+        if (TEST) r.clone().text().then(function (t) { showTest('Form service replied (' + r.status + '): ' + t); });
+        if (!r.ok) throw new Error('not sent');
+      })
+      .catch(function (e) { if (TEST) showTest('Could not reach the form service: ' + e.message); store.set('qlcard_queue', JSON.stringify(entry)); });
+  }
+  var TEST = /[?&]test\b/.test(location.search);
+  function showTest(msg) {
+    var box = document.getElementById('testNote');
+    if (!box) { box = document.createElement('p'); box.id = 'testNote'; box.className = 'status'; box.style.padding = '0 8.6%'; document.getElementById('sheet').insertBefore(box, document.querySelector('.back')); }
+    box.textContent = msg;
   }
   function retryQueued() {
     var q = store.get('qlcard_queue');

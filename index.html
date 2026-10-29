@@ -279,6 +279,7 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
      cannot collect them. They are unscrambled only after the page loads. */
   var SCRAMBLED_EMAIL = 'bmkuc3JlbnRyYXBscUBzbmsuaHRyYXZpbkE=';
   var SCRAMBLED_PHONE = 'ODg5Mzg3MDAxOTE5Kw==';
+  var SCRAMBLED_INBOX = 'bW9jLmxpYW1nQGh0cmF2aW5hc25r';   /* where visitor details are emailed (your Gmail); also scrambled */
   var PHONE_AS_SHOWN  = 'ODg5Mzg3MDAxOSAxOSs=';   /* spacing used on screen; also scrambled */
   var NAME     = 'K.N.S.Anivarth';
   var TITLE    = 'Associate';
@@ -404,7 +405,7 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
   /* ---------- G. SENDING THE VISITOR'S DETAIL TO YOUR INBOX ----------
      Uses FormSubmit (formsubmit.co), a free service that forwards form
      entries by email. The first entry ever sent triggers one confirmation
-     email to you; click "Activate" in it and every later entry arrives.
+     email to your Gmail inbox; click "Activate" in it and every later entry arrives.
      If the visitor is offline, the entry waits and is sent on their next visit. */
   function sendLead(entry) {
     var payload = {
@@ -417,7 +418,7 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
       _captcha: 'false'
     };
     if (entry.type === 'Email') payload.email = entry.value;   /* lets you press Reply */
-    return fetch('https://formsubmit.co/ajax/' + unscramble(SCRAMBLED_EMAIL), {
+    return fetch('https://formsubmit.co/ajax/' + unscramble(SCRAMBLED_INBOX), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
       body: JSON.stringify(payload)

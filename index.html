@@ -279,7 +279,6 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
      cannot collect them. They are unscrambled only after the page loads. */
   var SCRAMBLED_EMAIL = 'bmkuc3JlbnRyYXBscUBzbmsuaHRyYXZpbkE=';
   var SCRAMBLED_PHONE = 'ODg5Mzg3MDAxOTE5Kw==';
-  var SCRAMBLED_INBOX = 'bW9jLmxpYW1nQGh0cmF2aW5hc25r';   /* where visitor details are emailed (your Gmail); also scrambled */
   var PHONE_AS_SHOWN  = 'ODg5Mzg3MDAxOSAxOSs=';   /* spacing used on screen; also scrambled */
   var NAME     = 'K.N.S.Anivarth';
   var TITLE    = 'Associate';
@@ -402,32 +401,31 @@ body{margin:0;background:var(--tint);color:var(--ink);font:400 15px/1.42 var(--s
     return null;
   }
 
-  /* ---------- G. SENDING THE VISITOR'S DETAIL TO YOUR INBOX ----------
-     Uses FormSubmit (formsubmit.co), a free service that forwards form
-     entries by email. The first entry ever sent triggers one confirmation
-     email to your Gmail inbox; click "Activate" in it and every later entry arrives.
-     If the visitor is offline, the entry waits and is sent on their next visit. */
+  /* ---------- G. SENDING THE VISITOR'S DETAIL TO YOUR GOOGLE SHEET ----------
+     Each entry is posted to your Google Form ("Business card visitors").
+     Google adds it as a new row in the linked Google Sheet and emails you
+     at knsanivarth@gmail.com. The numbers below are the form's hidden names
+     for each question; they come from the form's pre-filled link.
+     Google does not send a reply the page can read, so if the visitor is
+     offline the entry waits and is sent on their next visit. */
+  var FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeZ33YB5Z6fFe0Y6wFXUXYg_NwsSjfxXi4HUwFbTIapTXgv1g/formResponse';
+  var FIELD = {
+    contact: 'entry.131264469',     /* Visitor contact: what the visitor typed */
+    company: 'entry.1535439758',    /* Company Name */
+    email:   'entry.1386302124',    /* Email Address */
+    phone:   'entry.806885385',     /* Phone Number */
+    purpose: 'entry.2119583308'     /* Purpose of Visit */
+  };
   function sendLead(entry) {
-    var payload = {
-      'Visitor contact': entry.value,
-      'Detail type': entry.type,
-      'Viewed at': entry.time,
-      'Card address': location.href.split('?')[0],
-      _subject: 'New visitor on your QL Partners business card',
-      _template: 'table',
-      _captcha: 'false'
-    };
-    if (entry.type === 'Email') payload.email = entry.value;   /* lets you press Reply */
-    return fetch('https://formsubmit.co/ajax/' + unscramble(SCRAMBLED_INBOX), {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(payload)
-    }).then(function (r) {
-        /* Test mode (add ?test to the address): shows the form service's reply on screen. */
-        if (TEST) r.clone().text().then(function (t) { showTest('Form service replied (' + r.status + '): ' + t); });
-        if (!r.ok) throw new Error('not sent');
-      })
-      .catch(function (e) { if (TEST) showTest('Could not reach the form service: ' + e.message); store.set('qlcard_queue', JSON.stringify(entry)); });
+    var data = new URLSearchParams();
+    data.append(FIELD.contact, entry.value + ' (' + entry.type + ')');
+    data.append(FIELD.company, 'Business card visitor');
+    if (entry.type === 'Email') data.append(FIELD.email, entry.value);
+    else data.append(FIELD.phone, entry.value);
+    data.append(FIELD.purpose, 'Other');
+    return fetch(FORM_URL, { method: 'POST', mode: 'no-cors', body: data })
+      .then(function () { if (TEST) showTest('Sent to the Google Form. Check the sheet for a new row.'); })
+      .catch(function (e) { if (TEST) showTest('Could not reach Google: ' + e.message); store.set('qlcard_queue', JSON.stringify(entry)); });
   }
   var TEST = /[?&]test\b/.test(location.search);
   function showTest(msg) {
